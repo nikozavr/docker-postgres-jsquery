@@ -120,19 +120,21 @@ if [ "$1" = 'postgres' ]; then
 
 	fi
 
-	exec gosu postgres "$@" &
-	cd /home/
-	git config --global http.sslVerify false
-	git clone https://github.com/postgrespro/jsquery.git
-	cd jsquery
+	if [ ! -d "$DIRECTORY" ]; then
+		exec gosu postgres "$@" &
+		cd /home/
+		git config --global http.sslVerify false
+		git clone https://github.com/postgrespro/jsquery.git
+		cd jsquery
 
-	make USE_PGXS=1
-	sudo -u postgres psql postgres -c "CREATE USER root WITH SUPERUSER PASSWORD '$POSTGRES_PASSWORD';"
- 	sudo make USE_PGXS=1 install
+		make USE_PGXS=1
+		sudo -u postgres psql postgres -c "CREATE USER root WITH SUPERUSER PASSWORD '$POSTGRES_PASSWORD';"
+	 	sudo make USE_PGXS=1 install
 
-  make USE_PGXS=1 installcheck
-	psql postgres -c "CREATE EXTENSION jsquery;"
-	gosu postgres pg_ctl -D "$PGDATA" -m fast -w stop
+	  make USE_PGXS=1 installcheck
+		psql postgres -c "CREATE EXTENSION jsquery;"
+		gosu postgres pg_ctl -D "$PGDATA" -m fast -w stop
+	fi
 fi
 
 exec gosu postgres "$@"
