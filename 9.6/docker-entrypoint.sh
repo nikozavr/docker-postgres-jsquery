@@ -69,7 +69,7 @@ if [ "$1" = 'postgres' ]; then
 
 		{ echo; echo "host all all all $authMethod"; } | gosu postgres tee -a "$PGDATA/pg_hba.conf" > /dev/null
 
-		# internal start of server in order to allow set-up using psql-client		
+		# internal start of server in order to allow set-up using psql-client
 		# does not listen on external TCP/IP and waits until start finishes
 		gosu postgres pg_ctl -D "$PGDATA" \
 			-o "-c listen_addresses='localhost'" \
@@ -121,3 +121,12 @@ if [ "$1" = 'postgres' ]; then
 fi
 
 exec "$@"
+
+cd ~
+git config --global http.sslVerify false
+git clone https://github.com/postgrespro/jsquery.git
+cd jsquery
+make USE_PGXS=1
+sudo make USE_PGXS=1 install
+make USE_PGXS=1 installcheck
+psql DB -c "CREATE EXTENSION jsquery;"
