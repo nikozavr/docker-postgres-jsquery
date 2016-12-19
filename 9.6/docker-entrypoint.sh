@@ -65,6 +65,7 @@ if [ "$1" = 'postgres' ]; then
 
 			pass=
 			authMethod=trust
+			exit
 		fi
 
 		{ echo; echo "host all all all $authMethod"; } | gosu postgres tee -a "$PGDATA/pg_hba.conf" > /dev/null
@@ -115,18 +116,23 @@ if [ "$1" = 'postgres' ]; then
 		echo
 		echo 'PostgreSQL init process complete; ready for start up.'
 		echo
+
+
 	fi
 
-	exec gosu postgres "$@"
+	exec gosu postgres "$@" &
+	cd /home/
+	git config --global http.sslVerify false
+	git clone https://github.com/postgrespro/jsquery.git
+	cd jsquery
+
+	make USE_PGXS=1
+	sudo -u postgres psql postgres -c "CREATE USER root WITH SUPERUSER PASSWORD '$POSTGRES_PASSWORD';"
+ 	sudo make USE_PGXS=1 install
+
+  make USE_PGXS=1 installcheck
+	psql postgres -c "CREATE EXTENSION jsquery;"
+	gosu postgres pg_ctl -D "$PGDATA" -m fast -w stop
 fi
 
-exec "$@"
-
-cd ~
-git config --global http.sslVerify false
-git clone https://github.com/postgrespro/jsquery.git
-cd jsquery
-make USE_PGXS=1
-sudo make USE_PGXS=1 install
-make USE_PGXS=1 installcheck
-psql DB -c "CREATE EXTENSION jsquery;"
+exec gosu postgres "$@"
