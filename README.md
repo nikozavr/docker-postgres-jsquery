@@ -8,7 +8,7 @@ Dockerfile для запуска PostgreSQL с установленным рас
 
 `docker build -t $IMAGENAME .`
 
-`docker run --it -d -p 5432:5432 --name=$CONTAINERNAME -e POSTGRES_PASSWORD=$PASSWORD -v $HOSTDIR:/var/lib/postgresql/data/ $IMAGENAME`
+`docker run -it -d -p 5432:5432 --name=$CONTAINERNAME -e POSTGRES_PASSWORD=$PASSWORD -v $HOSTDIR:/var/lib/postgresql/data/ $IMAGENAME`
 
 , где
 `$IMAGENAME` - имя образа
