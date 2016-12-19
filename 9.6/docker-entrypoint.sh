@@ -121,7 +121,9 @@ if [ "$1" = 'postgres' ]; then
 	fi
 	if [ ! -d "/home/jsquery" ]; then
 		exec gosu postgres "$@" &
-		if !(sudo -u postgres psql postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='root'" | grep -q 1;) then
+		if sudo -u postgres psql postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='root'" | grep -q 1; then
+			echo "root is already created"
+		else
 			sudo -u postgres psql postgres -c "CREATE USER root WITH SUPERUSER PASSWORD '$POSTGRES_PASSWORD';"
 		fi
 		cd /home/
