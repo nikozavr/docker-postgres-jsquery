@@ -1,20 +1,23 @@
 # О репозитории
 
-Dockerfile для запуска PostgreSQL с установленным расширением jsquery.
+###Dockerfile для запуска PostgreSQL с установленным расширением jsquery.
 
 Для запуска на Windows 7 необходима версия VirtualBox > 5.1.10
 
-Комманда для запуска:
+Образ на docker hub - https://hub.docker.com/r/nikozavr/postgresqlpro/
 
-`docker build -t $IMAGENAME .`
+Последовательность команд для запуска:
 
-`docker run -it -d -p 5432:5432 --name=$CONTAINERNAME -e POSTGRES_PASSWORD=$PASSWORD -v $HOSTDIR:/var/lib/postgresql/data/ $IMAGENAME`
+* Сборка образа из исходных кодов
 
-, где
-`$IMAGENAME` - имя образа
+  `docker build -t $IMAGENAME .`
 
-`$CONTAINERNAME`- имя контейнера
+* Запуск контейнера с использование собранного образа
+ 
+  `docker run -it -d -p 5432:5432 --name=$CONTAINERNAME -e POSTGRES_PASSWORD=$PASSWORD -v $HOSTDIR:/var/lib/postgresql/data/ $IMAGENAME`
 
-`$PASSWORD` - пароль для доступа к базе
-
-`$HOSTDIR` - адрес директории на устройстве, которая будет содержать данные и монтироваться к контейнеру
+    , где
+    * `$IMAGENAME` - имя образа
+    * `$CONTAINERNAME`- имя контейнера
+    * `$PASSWORD` - пароль для доступа к базе
+    * `$HOSTDIR` - адрес директории на устройстве, которая будет содержать данные и монтироваться к контейнеру
