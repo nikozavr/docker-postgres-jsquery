@@ -44,7 +44,7 @@ if [ "$1" = 'postgres' ] && [ "$(id -u)" = '0' ]; then
 		chmod 700 "$POSTGRES_INITDB_XLOGDIR"
 	fi
 
-	exec su-exec postgres "$BASH_SOURCE" "$@"
+	exec gosu postgres "$BASH_SOURCE" "$@"
 fi
 
 if [ "$1" = 'postgres' ]; then
@@ -76,7 +76,6 @@ if [ "$1" = 'postgres' ]; then
 				         Docker's default configuration, this is
 				         effectively any other container on the same
 				         system.
-
 				         Use "-e POSTGRES_PASSWORD=password" to set
 				         it in "docker run".
 				****************************************************
