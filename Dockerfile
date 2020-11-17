@@ -82,8 +82,8 @@ RUN set -ex; \
         rm -rf "$GNUPGHOME"; \
         apt-key list
 
-ENV PG_MAJOR 12
-ENV PG_VERSION 12.3-1.pgdg100+1
+ENV PG_MAJOR 13
+ENV PG_VERSION 13.1-1.pgdg100+1
 
 RUN set -ex; \
         \
@@ -118,6 +118,8 @@ RUN set -ex; \
                         \
 # build .deb files from upstream's source packages (which are verified by apt-get)
                         apt-get update; \
+                        # we need DEBIAN_FRONTEND on postgresql-13 for slapd ("Please enter the password for the admin entry in your LDAP directory."); see https://bugs.debian.org/929417
+			DEBIAN_FRONTEND=noninteractive \
                         apt-get build-dep -y \
                                 postgresql-common pgdg-keyring \
                                 "postgresql-$PG_MAJOR=$PG_VERSION" \
@@ -182,7 +184,7 @@ VOLUME /var/lib/postgresql/data
 
 COPY jsquery/ /opt/jsquery/
 
-RUN apt-get update && apt-get install -y build-essential bison flex postgresql-server-dev-12
+RUN apt-get update && apt-get install -y build-essential bison flex postgresql-server-dev-13
 
 RUN cd /opt/jsquery \
         && make USE_PGXS=1 \
@@ -192,6 +194,36 @@ COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod 777 /usr/local/bin/docker-entrypoint.sh \
     && ln -s /usr/local/bin/docker-entrypoint.sh / # backwards compat
 ENTRYPOINT ["docker-entrypoint.sh"]
+
+# We set the default STOPSIGNAL to SIGINT, which corresponds to what PostgreSQL
+# calls "Fast Shutdown mode" wherein new connections are disallowed and any
+# in-progress transactions are aborted, allowing PostgreSQL to stop cleanly and
+# flush tables to disk, which is the best compromise available to avoid data
+# corruption.
+#
+# Users who know their applications do not keep open long-lived idle connections
+# may way to use a value of SIGTERM instead, which corresponds to "Smart
+# Shutdown mode" in which any existing sessions are allowed to finish and the
+# server stops when all sessions are terminated.
+#
+# See https://www.postgresql.org/docs/12/server-shutdown.html for more details
+# about available PostgreSQL server shutdown signals.
+#
+# See also https://www.postgresql.org/docs/12/server-start.html for further
+# justification of this as the default value, namely that the example (and
+# shipped) systemd service files use the "Fast Shutdown mode" for service
+# termination.
+#
+STOPSIGNAL SIGINT
+#
+# An additional setting that is recommended for all users regardless of this
+# value is the runtime "--stop-timeout" (or your orchestrator/runtime's
+# equivalent) for controlling how long to wait between sending the defined
+# STOPSIGNAL and sending SIGKILL (which is likely to cause data corruption).
+#
+# The default in most runtimes (such as Docker) is 10 seconds, and the
+# documentation at https://www.postgresql.org/docs/12/server-start.html notes
+# that even 90 seconds may not be long enough in many instances.
 
 EXPOSE 5432
 CMD ["postgres"]
